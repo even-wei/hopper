@@ -16,6 +16,13 @@ This repo is a Claude Code plugin marketplace + Codex prompt set. Two surfaces, 
 - New Codex-only prompts that have no Claude Code skill counterpart can live under `prompts/` standalone.
 - Keep skill `description` fields specific enough to disambiguate from neighboring skills (especially `handoff:*` from the third-party handoff plugin).
 
+## Install
+
+```bash
+/plugin marketplace add even-wei/hopper
+/plugin install hopper@hopper
+```
+
 ## Local development
 
 ```bash

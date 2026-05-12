@@ -26,6 +26,13 @@ hopper/
 ## Use with Claude Code
 
 ```bash
+/plugin marketplace add even-wei/hopper
+/plugin install hopper@hopper
+```
+
+To develop against a local checkout instead of the remote:
+
+```bash
 /plugin marketplace add /path/to/hopper
 /plugin install hopper@hopper
 ```
