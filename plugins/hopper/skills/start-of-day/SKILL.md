@@ -25,12 +25,13 @@ Source Rules:
 - Linear: list issues where assignee = linear_user updated since window-start, plus issues in projects ∈ linear_lead_projects updated since window-start. For each, fetch comments since window-start.
 - Slack: messages where the user is @-mentioned, DMs to the user, and new replies in threads the user previously posted in. All since window-start.
 - Notion: comments mentioning notion_user and new comments on pages the user authored. All since window-start.
+- GitHub: PRs the user authored that are open and in CHANGES_REQUESTED state (reviewer waiting on the user's fix). Fetch via `gh search prs --author=@me --state=open --review=changes-requested --json url,repository,title,updatedAt,number`. No time-window filter on this query — staleness is itself a signal worth surfacing.
 - Transcripts: deferred. Skip; do not block on this source.
 - If any source's MCP tool is unavailable or auth-expired, print "Source X unavailable, continuing without it" and continue. Note `[source X unavailable]` in the daily file.
 
 Signal Heuristic (signal-first; rank items globally, regardless of source):
 1. Direct ask of you — DM, @mention with question, Linear issue assigned + state change demanding action.
-2. Decision-blocking — Linear issue blocked, PR awaiting your review, Slack thread waiting on your reply.
+2. Decision-blocking — Linear issue blocked, PR awaiting your review, Slack thread waiting on your reply, PR you authored in CHANGES_REQUESTED state (reviewer waiting on your fix; default routing: dispatch `/recce-dev:pr-review-response <url>`).
 3. Project-level shifts — status update, scope change, stakeholder comment on a lead project.
 4. Carry-over — items from yesterday's "Tomorrow's Lead." Surfaced prominently regardless of fresh signal.
 5. FYI / informational — channel announcements, status updates not requesting action. Compress to one-liner.
@@ -47,6 +48,7 @@ Stage 0 — Bootstrap (silent):
 
 Stage 1 — Digest review:
 - Print compact digest: per-source counts + top-ranked items with their ranking label + prior-evening "Tomorrow's Lead" verbatim.
+- If any user-authored PRs in CHANGES_REQUESTED were detected in Stage 0, include a "Your PRs awaiting fixes" sub-section. One line per PR: `<repo> #<number> — <title> — <url> — updatedAt <updatedAt> — proposed routing: /recce-dev:pr-review-response <url>`. Omit the sub-section entirely if none detected (do not print "0 items").
 - Surface any conflicting signals explicitly (do not pick silently).
 - Input gate: "Anything you already know is on your mind today that I should weight heavily? Anything in the digest you'd deprioritize?"
 
@@ -57,6 +59,13 @@ Stage 2 — Theme proposal:
 Stage 3 — Action proposal:
 - For confirmed themes, propose 3–5 actions tagged to themes.
 - Each action: verb-phrase + source link + effort estimate + one-line rationale.
+- Auto-fill for user-authored PRs in CHANGES_REQUESTED (from Stage 0): for each such PR, emit an action with this exact shape — no manual rephrasing:
+  ```
+  - [ ] [Theme: Close review loops] Dispatch teammate via `/recce-dev:pr-review-response` for PR #NNN (<title>) — <url> — est. 30–45 min teammate run
+         why: <repo> #NNN is CHANGES_REQUESTED; reviewer waiting since <updatedAt>
+  ```
+  If the user has no other themes today, "Close review loops" is the single theme. If the user already confirmed other themes in Stage 2, attach "Close review loops" as an additional theme alongside them and list these actions under it.
+- The Stage 3 gate still applies: the user can drop or edit any auto-filled action. This is pre-filled wording, not auto-execution.
 - Input gate: "Confirm, edit, drop, or add actions. I'll write the file once you're set."
 
 Stage 4 — Write & summarize:
