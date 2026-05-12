@@ -1,0 +1,18 @@
+{
+  "name": "hopper",
+  "owner": {
+    "name": "even-wei"
+  },
+  "metadata": {
+    "description": "Hopper — operational skills toolkit for AI coding agents (Claude Code, Codex, and friends)",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "hopper",
+      "description": "Operational skills toolkit for AI coding agents — start-of-day and end-of-day daily briefs to start",
+      "source": "./plugins/hopper",
+      "version": "0.1.0"
+    }
+  ]
+}
