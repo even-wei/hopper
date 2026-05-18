@@ -45,10 +45,12 @@ Stage 0 — Bootstrap (silent):
 - Read prior-evening "Tomorrow's Lead" from yesterday's file if present.
 - Pull source data per Source Rules.
 - Score and rank items per the Signal Heuristic.
+- For each project in `linear_lead_projects`, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 1's digest and Stage 4's Supporting Signal — *awareness only*, not a draft offer (drafting lives in end-of-day's Stage 6).
 
 Stage 1 — Digest review:
 - Print compact digest: per-source counts + top-ranked items with their ranking label + prior-evening "Tomorrow's Lead" verbatim.
 - If any user-authored PRs in CHANGES_REQUESTED were detected in Stage 0, include a "Your PRs awaiting fixes" sub-section. One line per PR: `<repo> #<number> — <title> — <url> — updatedAt <updatedAt> — proposed routing: /recce-dev:pr-review-response <url>`. Omit the sub-section entirely if none detected (do not print "0 items").
+- If any lead projects are marked **stale** in Stage 0, include a "Stale lead projects (no status update in 5+ days)" sub-section. One line per project: `<project name> — <days-stale>d since last update — <project URL>`. Awareness only — do not auto-create theme/actions; user decides whether to fold into today's arc. Omit the sub-section entirely if none.
 - Surface any conflicting signals explicitly (do not pick silently).
 - Input gate: "Anything you already know is on your mind today that I should weight heavily? Anything in the digest you'd deprioritize?"
 
@@ -70,6 +72,7 @@ Stage 3 — Action proposal:
 
 Stage 4 — Write & summarize:
 - Write workspace/daily/<today>.md morning section per the daily-brief template (schema appended below). Copy the prior-evening "Tomorrow's Lead" verbatim into "Carried From Yesterday" (do not summarize or reword).
+- If any lead projects are marked **stale** in Stage 0, add a "Stale lead projects" bullet under Supporting Signal listing each project (name + days-stale + URL). Plain awareness line, no action attached.
 - Resolve every action's source link to a canonical URL (Linear issue URL, Slack permalink, Notion page URL, GitHub PR URL). A bare ID like "DRC-3309" is not sufficient — produce the full URL.
 - Print exactly 5 lines to terminal, one per line in this order:
   1. Today's arcs (numbered, comma-separated).
@@ -98,6 +101,7 @@ Quality Bar:
 - Ranking labels visible in the digest.
 - All four input gates present.
 - "Carried From Yesterday" included iff prior-evening file existed.
+- Stale lead projects (no status update in 5+ days, active state) are surfaced in Stage 1's digest and the daily file's Supporting Signal — awareness only, never auto-elevated into themes/actions.
 ```
 
 ## Daily Brief Schema
