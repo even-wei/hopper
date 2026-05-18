@@ -29,6 +29,7 @@ Stage 0 — Bootstrap (silent):
 - If missing → halt and ask: "No morning brief found for today. Reconstruct one from sources before reflecting, or just write a free-form day-summary?" Default to free-form day-summary on user choice.
 - Pull source data per Source Rules.
 - For each morning theme/action, infer status (done | partial | skipped) and gather one line of evidence.
+- For each project in `linear_lead_projects`, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 6's follow-ups menu.
 
 Stage 1 — Reflection (single batched gate):
 - Present every morning theme + every morning action together, each with inferred status and evidence line.
@@ -57,7 +58,10 @@ Stage 6 — Write & optional follow-ups:
 - Append the evening section to workspace/daily/<today>.md per the daily-brief template. Format the Decisions Captured section exactly as the template specifies: one line per decision, format `"<decision> — <context> — <link>"` with no bullet prefix.
 - Print a summary to terminal.
 - Offer the optional follow-ups menu (once, user picks any/all/none). Present all three options every run; mark options as "N/A" when nothing applicable:
-  - "Draft Linear status update for project [X]?" (one offer per project with confirmed progress today; "N/A — no lead-project progress" if none)
+  - "Draft Linear status update for project [X]?" — offer once per lead project matching either trigger:
+    - **Progress trigger:** project had confirmed progress today (issue state change, PR merged into a project issue, status comment from the user, etc.).
+    - **Staleness trigger:** project is marked **stale** in Stage 0 (last status update >5 days ago, or never received one, and project is in an active state).
+    Mark "N/A — no lead-project needs an update" if no project matches either trigger.
   - "Draft Slack message to update [#channel]?"
   - "Stash decisions to auto-memory?" ("N/A — no decisions captured" if Stage 2 produced none; otherwise write a project or reference type memory file at ~/.claude/projects/-Users-evenwei-InfuseAI-workspace/memory/ and update MEMORY.md index)
 
@@ -79,4 +83,5 @@ Quality Bar:
 - Tomorrow's Lead is 1–2 items.
 - Reflection input gate is batched (single round), not per-item.
 - Optional follow-ups menu is offered exactly once.
+- Lead-project staleness scan: every active lead project with no status update in the last 5 days is surfaced in Stage 6's Linear-update offer, even without same-day progress.
 ```
