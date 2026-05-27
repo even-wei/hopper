@@ -13,10 +13,14 @@ hopper/
 │   ├── .claude-plugin/plugin.json
 │   └── skills/
 │       ├── start-of-day/SKILL.md      hopper:start-of-day
-│       └── end-of-day/SKILL.md        hopper:end-of-day
+│       ├── end-of-day/SKILL.md        hopper:end-of-day
+│       ├── pr-explain/SKILL.md        hopper:pr-explain
+│       └── skill-tune/SKILL.md        hopper:skill-tune
 ├── prompts/                           Codex / generic agent canonical source
 │   ├── start-of-day-task.md
-│   └── end-of-day-task.md
+│   ├── end-of-day-task.md
+│   ├── pr-explain-task.md
+│   └── skill-tune-task.md
 ├── templates/                         Schemas referenced by prompts
 │   └── daily-brief.md
 ├── AGENTS.md                          Entry point for Codex
@@ -37,7 +41,11 @@ To develop against a local checkout instead of the remote:
 /plugin install hopper@hopper
 ```
 
-After install, `hopper:start-of-day` and `hopper:end-of-day` are callable as skills. They walk you through the daily brief interactively and write `workspace/daily/<today>.md`.
+After install, the following skills are callable:
+
+- `hopper:start-of-day`, `hopper:end-of-day` — interactive daily brief that writes `workspace/daily/<today>.md`.
+- `hopper:pr-explain` — generates a standalone per-PR review brief HTML at `workspace/pr-views/`.
+- `hopper:skill-tune` — tunes a target SKILL.md against recent transcripts using SkillOpt-style bounded edits with a per-skill rejected-edit buffer ([arXiv:2605.23904](https://arxiv.org/abs/2605.23904)).
 
 ## Use with Codex
 
@@ -59,6 +67,8 @@ github_user: <gh-login>
 ## Roadmap
 
 - [x] `start-of-day`, `end-of-day` (v0.1.0)
+- [x] `pr-explain` (v0.1.1)
+- [x] `skill-tune` (v0.1.3) — SkillOpt-style human-in-the-loop skill tuner
 - [ ] `plan`, `bugfix`, `feature`, `review`, `retro`, `handoff`, `batch-plan`, `perspective-review` (sourced from [agent-ops](https://github.com/InfuseAI/agent-ops) prompts)
 - [ ] Additional secretarial skills as needed
 
