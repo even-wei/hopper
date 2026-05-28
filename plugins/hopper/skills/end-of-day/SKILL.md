@@ -52,7 +52,7 @@ Stage 3 — Open loops:
 - Two lists:
   - Waiting on others: things you asked others for that haven't come back.
   - Owed to others: things others asked of you that you haven't answered.
-- Cross-reference previous days' open loops in workspace/daily/ — carry forward any still-unresolved.
+- Cross-reference previous days' open loops in workspace/daily/. For each, verify it is still actually open before carrying forward: check for a closure signal since the carry (issue state change, new comment, thread reply, calendar event, PR merge). If the source is non-MCP (offline conversation, F2F meeting, hallway), do NOT assume slippage — flag the loop as "carry from N days ago, not verified — confirm still owed?" rather than restating as still-open. Especially after weekend gaps (no Sat/Sun daily file): assume offline work may have closed loops, ask before treating Friday's open items as Monday's carries.
 - Input gate: "Anything to add, drop, or mark resolved?"
 
 Stage 4 — Stakeholder summary:
@@ -61,6 +61,7 @@ Stage 4 — Stakeholder summary:
 
 Stage 5 — Tomorrow's lead:
 - Propose 1–2 candidate themes/actions for tomorrow based on: open loops, partial actions, today's late signals that didn't fit, deferred items.
+- For any proposed action that pings a colleague (status nudge, reschedule, light ask), draft as "ping <name> in #<channel> with @mention" rather than "DM <name>." DMs hide cross-loop signal from collaborators who may also have context. Reserve DM phrasing for genuinely private content (1:1 agenda drafts before posting, personal scheduling conflicts).
 - Input gate: "Edit or accept. (Tomorrow morning will read this and propose it back to you.)"
 
 Stage 6 — Write & optional follow-ups:

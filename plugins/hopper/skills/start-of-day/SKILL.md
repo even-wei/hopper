@@ -23,7 +23,7 @@ Inputs:
 Source Rules:
 - Time window: from most recent prior file's mtime in workspace/daily/ to now. If no prior file, fall back to last 24h.
 - Linear: list issues where assignee = linear_user updated since window-start, plus issues in the user's lead projects (Linear projects where `lead.id == linear_user` and `status.type ∈ {started, planned}`; fetched live via `list_projects(member=linear_user)` and filtered) updated since window-start. For each, fetch comments since window-start.
-- Slack: messages where the user is @-mentioned, DMs to the user, and new replies in threads the user previously posted in. All since window-start.
+- Slack: messages where the user is @-mentioned, DMs to the user, and new replies in threads the user previously posted in. All since window-start. Before treating any Slack signal as evidence of a Recce-product bug, read the thread parent message and fetch attached image/file metadata — keyword overlap ("banner," "rendering," "not showing," "not loading") is insufficient because those words also appear in Slack-UI, browser-UI, and OS-UI questions. If the parent message lives in #random or another non-product channel, default prior is "probably not a Recce bug." Phrase any attribution loosely ("Slack thread <link> in #random — Andy reply suggests X"), never certainly ("Andy surfaced a render bug").
 - Notion: comments mentioning notion_user and new comments on pages the user authored. All since window-start.
 - GitHub: PRs the user authored that are open and in CHANGES_REQUESTED state (reviewer waiting on the user's fix). Fetch via `gh search prs --author=@me --state=open --review=changes-requested --json url,repository,title,updatedAt,number`. No time-window filter on this query — staleness is itself a signal worth surfacing.
 - Transcripts: deferred. Skip; do not block on this source.
@@ -43,6 +43,7 @@ Walk-Through (interactive — input gate at each stage):
 Stage 0 — Bootstrap (silent):
 - Resolve time window per Source Rules.
 - Read prior-evening "Tomorrow's Lead" from yesterday's file if present.
+- Verify each carried item is still open before re-proposing. For "Owed to others" / "Tomorrow's Lead" items inherited from a prior day, check for a closure signal since the carry: issue state change, new comment, thread reply, calendar event. If the source is non-MCP (offline conversation, F2F meeting, hallway), do NOT assume slippage — flag in Stage 1 as "carry from N days ago, not verified — confirm still owed?" rather than restating as fact. For carries that have slipped 3+ days, put the verification check above the action: "Confirm this is still open" before "Send the ping." Weekend gaps (no Sat/Sun daily file) especially: assume offline work may have closed loops, ask before treating Friday's open items as Monday's carries.
 - Pull source data per Source Rules.
 - Score and rank items per the Signal Heuristic.
 - Fetch the user's lead projects from Linear: `list_projects(member=linear_user)` filtered to `lead.id == linear_user` and `status.type ∈ {started, planned}`. For each such project, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 1's digest and Stage 4's Supporting Signal — *awareness only*, not a draft offer (drafting lives in end-of-day's Stage 6).
@@ -61,6 +62,7 @@ Stage 2 — Theme proposal:
 Stage 3 — Action proposal:
 - For confirmed themes, propose 3–5 actions tagged to themes.
 - Each action: verb-phrase + source link + effort estimate + one-line rationale.
+- For actions that ping a colleague (status nudge, reschedule, light ask): default to "ping <name> in #<channel> with @mention" rather than "DM <name>." DMs hide cross-loop signal from collaborators who may also have context. Reserve DM phrasing for genuinely private content (1:1 agenda drafts before posting, personal scheduling conflicts).
 - Auto-fill for user-authored PRs in CHANGES_REQUESTED (from Stage 0): for each such PR, emit an action with this exact shape — no manual rephrasing:
   ```
   - [ ] [Theme: Close review loops] Dispatch teammate via `/recce-dev:pr-review-response` for PR #NNN (<title>) — <url> — est. 30–45 min teammate run
