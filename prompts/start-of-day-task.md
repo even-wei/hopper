@@ -7,13 +7,13 @@ Goal:
 - Help the user decide today's focus by surfacing decision-relevant signals from Slack, Linear, and Notion since the last daily brief, then walking through theme and action proposals interactively. Write the morning section of workspace/daily/<today>.md when confirmed.
 
 Inputs:
-- workspace/daily/.config.yml (linear_user, linear_lead_projects, slack_user, notion_user)
+- workspace/daily/.config.yml (linear_user, slack_user, notion_user)
 - workspace/daily/ directory (most recent prior file is the "last brief" anchor)
 - Live source pulls (per Source Rules below)
 
 Source Rules:
 - Time window: from most recent prior file's mtime in workspace/daily/ to now. If no prior file, fall back to last 24h.
-- Linear: list issues where assignee = linear_user updated since window-start, plus issues in projects ∈ linear_lead_projects updated since window-start. For each, fetch comments since window-start.
+- Linear: list issues where assignee = linear_user updated since window-start, plus issues in the user's lead projects (Linear projects where `lead.id == linear_user` and `status.type ∈ {started, planned}`; fetched live via `list_projects(member=linear_user)` and filtered) updated since window-start. For each, fetch comments since window-start.
 - Slack: messages where the user is @-mentioned, DMs to the user, and new replies in threads the user previously posted in. All since window-start.
 - Notion: comments mentioning notion_user and new comments on pages the user authored. All since window-start.
 - GitHub: PRs the user authored that are open and in CHANGES_REQUESTED state (reviewer waiting on the user's fix). Fetch via `gh search prs --author=@me --state=open --review=changes-requested --json url,repository,title,updatedAt,number`. No time-window filter on this query — staleness is itself a signal worth surfacing.
@@ -36,7 +36,7 @@ Stage 0 — Bootstrap (silent):
 - Read prior-evening "Tomorrow's Lead" from yesterday's file if present.
 - Pull source data per Source Rules.
 - Score and rank items per the Signal Heuristic.
-- For each project in `linear_lead_projects`, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 1's digest and Stage 4's Supporting Signal — *awareness only*, not a draft offer (drafting lives in end-of-day's Stage 6).
+- Fetch the user's lead projects from Linear: `list_projects(member=linear_user)` filtered to `lead.id == linear_user` and `status.type ∈ {started, planned}`. For each such project, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 1's digest and Stage 4's Supporting Signal — *awareness only*, not a draft offer (drafting lives in end-of-day's Stage 6).
 
 Stage 1 — Digest review:
 - Print compact digest: per-source counts + top-ranked items with their ranking label + prior-evening "Tomorrow's Lead" verbatim.

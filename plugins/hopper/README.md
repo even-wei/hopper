@@ -9,7 +9,7 @@ Daily-brief skills for Claude Code. Part of the [hopper](../../README.md) toolki
 
 ## Configuration
 
-The skills read `workspace/daily/.config.yml` for scope IDs (`linear_user`, `linear_lead_projects`, `slack_user`, `notion_user`, `github_user`).
+The skills read `workspace/daily/.config.yml` for scope IDs (`linear_user`, `slack_user`, `notion_user`, `github_user`). Lead projects are fetched live from Linear (projects where you're the lead and the status is `started` or `planned`).
 
 ## Source of truth
 

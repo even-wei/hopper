@@ -8,7 +8,7 @@ Goal:
 
 Inputs:
 - workspace/daily/<today>.md (must exist; if missing, see Edge Cases)
-- workspace/daily/.config.yml (linear_user, linear_lead_projects, slack_user, notion_user)
+- workspace/daily/.config.yml (linear_user, slack_user, notion_user)
 - Live source pulls since this morning's timestamp
 
 Source Rules:
@@ -29,7 +29,7 @@ Stage 0 — Bootstrap (silent):
 - If missing → halt and ask: "No morning brief found for today. Reconstruct one from sources before reflecting, or just write a free-form day-summary?" Default to free-form day-summary on user choice.
 - Pull source data per Source Rules.
 - For each morning theme/action, infer status (done | partial | skipped) and gather one line of evidence.
-- For each project in `linear_lead_projects`, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 6's follow-ups menu.
+- Fetch the user's lead projects from Linear: `list_projects(member=linear_user)` filtered to `lead.id == linear_user` and `status.type ∈ {started, planned}`. For each such project, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 6's follow-ups menu.
 
 Stage 1 — Reflection (single batched gate):
 - Present every morning theme + every morning action together, each with inferred status and evidence line.

@@ -57,12 +57,13 @@ Both daily-brief skills expect `workspace/daily/.config.yml` in the directory yo
 
 ```yaml
 linear_user: <uuid>
-linear_lead_projects:
-  - <project-uuid>
 slack_user: <slack-uid>
 notion_user: <notion-uid>
 github_user: <gh-login>
 ```
+
+Lead projects are not configured here — both skills fetch them live from Linear
+(projects where `lead == linear_user` and status is `started` or `planned`).
 
 ## Roadmap
 
