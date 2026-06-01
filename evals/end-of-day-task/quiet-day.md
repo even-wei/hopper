@@ -30,8 +30,8 @@ Walk through the prompt as written.
 ## Expected Behavior
 
 - Stage 1 reflection marks all 3 actions as "skipped" or "partial" with conservative evidence — not "done." The DRC-3309 comment from CL is a fresh asking-back signal, not evidence of progress.
-- Stage 3 open loops correctly captures: waiting on (none new), owed to (CL's follow-up on DRC-3309, plus the 2 Slack mentions awaiting reply).
-- Stage 5 tomorrow's lead carries the un-acted morning items forward.
+- Stage 1 open loops correctly captures: waiting on (none new), owed to (CL's follow-up on DRC-3309, plus the 2 Slack mentions awaiting reply).
+- Stage 1 tomorrow's lead carries the un-acted morning items forward.
 - Stakeholder summary honestly reflects no progress made.
 
 ## Failure Signals

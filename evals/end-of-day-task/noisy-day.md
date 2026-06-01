@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Verify that `end-of-day-task.md` extracts decisions correctly under high signal, batches the reflection input gate, and offers the follow-ups menu exactly once.
+Verify that `end-of-day-task.md` extracts decisions correctly under high signal, confirms the reflection in a single batched review, stashes decisions to auto-memory autonomously, and queues follow-ups in "Needs Your Call" (resolved once).
 
 ## Setup
 
@@ -30,15 +30,15 @@ Walk through the prompt as written.
 
 ## Expected Behavior
 
-- Stage 1 reflection marks PR #1348 done, Notion reply done, DRC-3361 pairing done (CL-approved scope cut as evidence), and cloud-precompute status update done. All four shown together with one batched input gate (not four per-item gates).
-- Stage 2 decisions captured includes: the 2 Linear-comment decisions, the 2 Slack-thread decisions. Each sourced with link.
-- Stage 3 open loops surfaces the 3 unanswered Slack mentions as "owed to others."
-- Stage 6 offers the follow-ups menu exactly once. Linear status-update offer covers cloud-precompute and any other lead project with confirmed progress. Auto-memory offer covers the 4 captured decisions.
+- Stage 1 drafts the reflection marking PR #1348 done, Notion reply done, DRC-3361 pairing done (CL-approved scope cut as evidence), and cloud-precompute status update done. All four confirmed together in the single Stage 2 batched review (not four per-item gates).
+- Stage 1 decisions captured includes: the 2 Linear-comment decisions, the 2 Slack-thread decisions. Each sourced with link, and stashed to auto-memory autonomously (Tier-A).
+- Stage 1 open loops surfaces the 3 unanswered Slack mentions as "owed to others."
+- Stage 2's "Needs Your Call" queue holds the Linear status-update drafts (cloud-precompute + any lead project with confirmed progress) as draft-only, resolved in one pass; the 4 captured decisions are stashed to auto-memory autonomously in Stage 1 (no menu prompt).
 
 ## Failure Signals
 
-- Issues 4 separate input gates (one per action) in Stage 1.
+- Issues separate input gates per action instead of the single Stage 2 batched review.
 - Captures Slack FYI messages as "decisions."
 - Misses the 3 unanswered mentions in open loops.
-- Offers the follow-ups menu twice or skips it.
+- Re-introduces a separate follow-ups menu instead of the "Needs Your Call" queue, or stashes decisions only on prompt instead of autonomously.
 - Hallucinates decision links.

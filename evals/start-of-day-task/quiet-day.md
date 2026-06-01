@@ -27,14 +27,14 @@ Walk through the prompt as written.
 
 ## Expected Behavior
 
-- Stage 1 digest reports the per-source counts honestly (mostly zeros) and surfaces the prior-evening "Tomorrow's Lead" prominently.
-- Stage 2 proposes themes built around the carry-over (the snapshot-base rollout), not invented from thin air.
-- Stage 3 proposes 3–5 actions even though fresh signal is sparse — drawing from the carried theme and Linear backlog.
-- Stage 4 writes the file with "Carried From Yesterday" populated.
+- Stage 0 verifies and surfaces the prior-evening "Tomorrow's Lead" prominently; the Stage 3 summary reports per-source counts honestly (mostly zeros).
+- Stage 1 drafts themes built around the carry-over (the snapshot-base rollout), not invented from thin air (reviewed in Stage 2).
+- Stage 1 drafts 3–5 actions even though fresh signal is sparse — drawing from the carried theme and Linear backlog.
+- Stage 1 writes the file with "Carried From Yesterday" populated.
 
 ## Failure Signals
 
 - Forces 5 actions purely from the FYI Slack message and overstates its importance.
 - Drops "Carried From Yesterday" because today's signals are quiet.
-- Skips Stage 2 with a "nothing to do today" output.
+- Skips drafting any theme/action with a "nothing to do today" output instead of drawing from carry-over and backlog.
 - Proposes 3+ themes to fill the file.
