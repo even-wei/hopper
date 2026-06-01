@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Hopper — operational skills toolkit for AI coding agents (Claude Code, Codex, and friends)",
-    "version": "0.1.5"
+    "version": "0.1.6"
   },
   "plugins": [
     {
       "name": "hopper",
       "description": "Operational skills toolkit for AI coding agents — daily briefs, per-PR review briefs, and SkillOpt-style skill tuning",
       "source": "./plugins/hopper",
-      "version": "0.1.5"
+      "version": "0.1.6"
     }
   ]
 }
