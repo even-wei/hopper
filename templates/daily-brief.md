@@ -26,6 +26,12 @@ tied to source signals (Linear state change, Slack ask, Notion comment, etc.).
 Pulled from prior evening's "Tomorrow's Lead" section, if present.
 If no prior evening file exists, omit this section.
 
+### ⏳ Needs Your Call
+Tier-B actions the agent drafted but did NOT execute (irreversible / high-stakes /
+leaves the workspace toward others). Omit this section if empty. One entry per item:
+- [ ] (executable-on-accept | draft-only) Action verb-phrase — <#channel / issue / person> — why: one line
+       draft: <the ready-to-send artifact, inline or linked>
+
 ---
 
 ## Evening
@@ -36,7 +42,7 @@ Per theme + per action, status with one of: ✅ done, 🟡 partial, ❌ skipped.
 
 ### Decisions Captured
 "<decision> — <context> — <link>". Pulled from Slack/Linear/Notion activity
-during the day. Feeds the auto-memory system.
+during the day. Stashed to the auto-memory system automatically (Tier-A).
 
 ### Open Loops
 - Waiting on others: things you asked others for that haven't come back
@@ -48,6 +54,12 @@ during the day. Feeds the auto-memory system.
 ### Tomorrow's Lead
 1–2 candidate themes/actions to start tomorrow with, based on what shifted today.
 Tomorrow morning's run reads this and proposes it back as a starting point.
+
+### ⏳ Needs Your Call
+Tier-B actions drafted but not executed (status-update drafts, Slack messages, etc.).
+Omit if empty. Resolve accept / edit / respond / skip. One entry per item:
+- [ ] (executable-on-accept | draft-only) Action verb-phrase — <#channel / issue / person> — why: one line
+       draft: <the ready-to-send artifact, inline or linked>
 ```
 
 ## Conventions
@@ -56,3 +68,4 @@ Tomorrow morning's run reads this and proposes it back as a starting point.
 - Status markers: emoji (`✅ 🟡 ❌`) for compactness.
 - Source links: always inline; never reference an item without a clickable link.
 - Carry-over: yesterday's "Tomorrow's Lead" → today's "Carried From Yesterday".
+- Needs Your Call: queued Tier-B actions (irreversible / high-stakes / leaves the workspace). Resolve accept / edit / respond / skip in one batched pass; omit the section when empty.

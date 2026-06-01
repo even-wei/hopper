@@ -1,11 +1,11 @@
 ---
 name: start-of-day
-description: Use at the start of the workday to surface decision-relevant signals from Linear, Slack, and Notion since the last brief, propose 1–2 themes with 3–5 concrete actions interactively, and write workspace/daily/<today>.md morning section. Triggers on "start of day", "morning brief", "daily kickoff", "what's on my plate today", "begin the day".
+description: Use at the start of the workday to surface decision-relevant signals from Linear, Slack, Notion, and GitHub since the last brief, autonomously advance the reversible work (verify carry-overs, draft 1–2 themes with 3–5 actions, write the file), and surface only genuine decisions in a single batched review. Appends the morning section to workspace/daily/<today>.md. Triggers on "start of day", "morning brief", "daily kickoff", "what's on my plate today", "begin the day".
 ---
 
 # Start-of-Day Daily Brief
 
-Walks through the morning brief in stages and writes `workspace/daily/<today>.md`. Reads scope IDs from `workspace/daily/.config.yml`.
+Advances the morning brief autonomously and writes `workspace/daily/<today>.md`, surfacing queued decisions in a single batched review. Reads scope IDs from `workspace/daily/.config.yml`.
 
 The Codex-readable canonical source for this prompt is `hopper/prompts/start-of-day-task.md`. The full prompt body is inlined below for Claude Code skill consumers, followed by the daily-brief schema appendix so the skill is self-contained regardless of where it's invoked.
 
@@ -13,10 +13,10 @@ The Codex-readable canonical source for this prompt is `hopper/prompts/start-of-
 
 ```text
 Goal:
-- Help the user decide today's focus by surfacing decision-relevant signals from Slack, Linear, and Notion since the last daily brief, then walking through theme and action proposals interactively. Write the morning section of workspace/daily/<today>.md when confirmed.
+- Help the user decide today's focus by surfacing decision-relevant signals from Slack, Linear, and Notion since the last daily brief, advancing the mechanical work autonomously, and surfacing only genuine decisions in a single batched review. Write the morning section of workspace/daily/<today>.md as you go — the daily file is a working draft you can revise, not a commitment that needs pre-approval.
 
 Inputs:
-- workspace/daily/.config.yml (linear_user, slack_user, notion_user)
+- workspace/daily/.config.yml (linear_user, slack_user, notion_user; optional standing_trusted list)
 - workspace/daily/ directory (most recent prior file is the "last brief" anchor)
 - Live source pulls (per Source Rules below)
 
@@ -38,72 +38,76 @@ Signal Heuristic (signal-first; rank items globally, regardless of source):
 
 Show ranking labels in the digest so the user can spot miscategorization.
 
-Walk-Through (interactive — input gate at each stage):
+Autonomy Model (how this brief moves work forward):
+- This brief is solicited — the user invoked it — so advance their work rather than pausing for permission at each step. Do the reversible, mechanical work; report it as an auditable trail ("moved X forward"), never "I decided for you." Reserve the user's attention for genuine, hard-to-reverse calls.
+- Classify every candidate action by reversibility and stakes, NOT by which stage you are in:
+  - Tier A — do it now, then log it (reversible AND low-stakes): read/triage signals; draft themes, actions, summaries, status-update text, tomorrow's lead; verify carry-over loops via MCP; write/append the daily file and stash decisions to auto-memory; add a comment to — or change the status of — an issue YOU own.
+  - Tier B — queue it for review (irreversible OR high-stakes OR it leaves the workspace toward others): posting to Slack; messaging stakeholders; posting a project status update; commenting on / transitioning / closing someone ELSE's issue; sending email; dispatching a teammate that mutates external state (pushes commits, posts a PR review). Fully draft the artifact, then put it in the "Needs Your Call" queue — do not execute unattended.
+  - Tier C — notify only (awareness, nothing to execute): stale-project flags, conflicting signals, FYI items. Surface; never auto-act.
+- Escalation rule (apply literally; do NOT improvise on "this feels like it needs judgment"): if reversible AND low-stakes -> do it and log it; if irreversible OR high-stakes OR it leaves the workspace toward others -> queue it.
+- Draft-only exceptions (queue but do NOT execute even on "accept" — the user posts): project status updates (draft-as-text policy) and Slack Connect channels (cannot post). Mark these "draft-only" in the queue; all other Tier-B items are "executable-on-accept."
+- Standing trust (optional): if workspace/daily/.config.yml has a `standing_trusted:` list (e.g. `linear-own-comment`, `slack-internal-post`), promote those classes to auto-execute. This is a user-granted, user-revocable standing permission — NOT a time-based auto-accept timer. Absent the config, default every Tier-B item to the queue.
 
-Stage 0 — Bootstrap (silent):
-- Resolve time window per Source Rules.
-- Read prior-evening "Tomorrow's Lead" from yesterday's file if present.
-- Verify each carried item is still open before re-proposing. For "Owed to others" / "Tomorrow's Lead" items inherited from a prior day, check for a closure signal since the carry: issue state change, new comment, thread reply, calendar event. If the source is non-MCP (offline conversation, F2F meeting, hallway), do NOT assume slippage — flag in Stage 1 as "carry from N days ago, not verified — confirm still owed?" rather than restating as fact. For carries that have slipped 3+ days, put the verification check above the action: "Confirm this is still open" before "Send the ping." Weekend gaps (no Sat/Sun daily file) especially: assume offline work may have closed loops, ask before treating Friday's open items as Monday's carries.
-- Pull source data per Source Rules.
-- Score and rank items per the Signal Heuristic.
-- Fetch the user's lead projects from Linear: `list_projects(member=linear_user)` filtered to `lead.id == linear_user` and `status.type ∈ {started, planned}`. For each such project, fetch the latest project status update timestamp. Mark a project as **stale** if its last status update is >5 days ago, or if it has no status updates at all (and the project is in an active state — not Canceled / Completed-and-archived). Carry this list into Stage 1's digest and Stage 4's Supporting Signal — *awareness only*, not a draft offer (drafting lives in end-of-day's Stage 6).
+Review Surface — "Needs Your Call" (one batched pass, never per-stage):
+- Always write a `### ⏳ Needs Your Call` block into the daily file. One entry per queued Tier-B item: the drafted artifact (text or link), a one-line why, the target (channel / issue / person), and a tag — `executable-on-accept` or `draft-only`. Omit the block only if the queue is empty.
+- When the session is interactive, also present the whole queue as a SINGLE consolidated review at the end of the run. Resolve each item with one of: accept (execute now if executable-on-accept), edit (revise, then accept), respond (free-form redirect), skip (leave it — it stays in the block for later). Resolve the batch in one pass; do not reintroduce stage-by-stage gates.
+- When the session is non-interactive, or the user steps away, the `Needs Your Call` block persists in the file and nothing Tier-B fires until the user resolves it; the next run re-surfaces unresolved items.
 
-Stage 1 — Digest review:
-- Print compact digest: per-source counts + top-ranked items with their ranking label + prior-evening "Tomorrow's Lead" verbatim.
-- If any user-authored PRs in CHANGES_REQUESTED were detected in Stage 0, include a "Your PRs awaiting fixes" sub-section. One line per PR: `<repo> #<number> — <title> — <url> — updatedAt <updatedAt> — proposed routing: /recce-dev:pr-review-response <url>`. Omit the sub-section entirely if none detected (do not print "0 items").
-- If any lead projects are marked **stale** in Stage 0, include a "Stale lead projects (no status update in 5+ days)" sub-section. One line per project: `<project name> — <days-stale>d since last update — <project URL>`. Awareness only — do not auto-create theme/actions; user decides whether to fold into today's arc. Omit the sub-section entirely if none.
-- Surface any conflicting signals explicitly (do not pick silently).
-- Input gate: "Anything you already know is on your mind today that I should weight heavily? Anything in the digest you'd deprioritize?"
+Walk-Through (autonomous-first; a single batched review at the end):
 
-Stage 2 — Theme proposal:
-- Propose 1–2 themes, each with rationale tied to digest + Stage 1 user input.
-- Input gate: "Do these themes match how you're framing today, or should I rework them? You can edit, replace, or add."
+Stage 0 — Bootstrap & verify (silent, autonomous):
+- Resolve time window per Source Rules. Read prior-evening "Tomorrow's Lead" from yesterday's file if present.
+- Pull source data per Source Rules; score and rank items per the Signal Heuristic.
+- Verify carry-overs yourself — do not punt MCP-answerable questions to the user. For each carried "Tomorrow's Lead" / "Owed to others" item whose source is MCP-checkable (Linear issue, Slack thread, PR, calendar), check the current state and mark it resolved or still-open from the evidence. Only flag "carry from N days ago, not verified — confirm still owed?" when the source is genuinely non-MCP (offline conversation, F2F, hallway). After weekend gaps, still verify via MCP first; ask only about the offline residue.
+- Fetch the user's lead projects: `list_projects(member=linear_user)` filtered to `lead.id == linear_user` and `status.type ∈ {started, planned}`. Mark a project **stale** if its last status update is >5 days ago, or it has none (active state only — not Canceled / Completed-and-archived).
 
-Stage 3 — Action proposal:
-- For confirmed themes, propose 3–5 actions tagged to themes.
-- Each action: verb-phrase + source link + effort estimate + one-line rationale.
-- For actions that ping a colleague (status nudge, reschedule, light ask): default to "ping <name> in #<channel> with @mention" rather than "DM <name>." DMs hide cross-loop signal from collaborators who may also have context. Reserve DM phrasing for genuinely private content (1:1 agenda drafts before posting, personal scheduling conflicts).
-- Auto-fill for user-authored PRs in CHANGES_REQUESTED (from Stage 0): for each such PR, emit an action with this exact shape — no manual rephrasing:
-  ```
-  - [ ] [Theme: Close review loops] Dispatch teammate via `/recce-dev:pr-review-response` for PR #NNN (<title>) — <url> — est. 30–45 min teammate run
-         why: <repo> #NNN is CHANGES_REQUESTED; reviewer waiting since <updatedAt>
-  ```
-  If the user has no other themes today, "Close review loops" is the single theme. If the user already confirmed other themes in Stage 2, attach "Close review loops" as an additional theme alongside them and list these actions under it.
-- The Stage 3 gate still applies: the user can drop or edit any auto-filled action. This is pre-filled wording, not auto-execution.
-- Input gate: "Confirm, edit, drop, or add actions. I'll write the file once you're set."
+Stage 1 — Draft, advance & write (autonomous, no gate):
+- Draft the full morning section: 1–2 themes (each tied to signal), 3–5 actions (each tagged to a theme, with a canonical source URL, an effort estimate, and a one-line why), Supporting Signal, and Carried From Yesterday (the prior-evening "Tomorrow's Lead" verbatim, annotated with the Stage 0 verification result).
+- For colleague pings, draft as "ping <name> in #<channel> with @mention", not "DM <name>" — DMs hide cross-loop signal from collaborators who may have context. Reserve DMs for genuinely private content (1:1 agenda drafts, personal scheduling).
+- Auto-fill for user-authored PRs in CHANGES_REQUESTED (from Stage 0): emit, per PR, exactly —
+    - [ ] [Theme: Close review loops] Dispatch teammate via `/recce-dev:pr-review-response` for PR #NNN (<title>) — <url> — est. 30–45 min teammate run
+           why: <repo> #NNN is CHANGES_REQUESTED; reviewer waiting since <updatedAt>
+  If the user has no other themes today, "Close review loops" is the single theme; otherwise attach it alongside. The dispatch is a Tier-B teammate action (it pushes commits / replies to reviewers) — queue it in "Needs Your Call" as executable-on-accept; do NOT auto-run it.
+- Perform Tier-A actions now and log each in the run tally (e.g. "verified 3 carries — DRC-XXXX already closed, dropped"; "moved own issue DRC-YYYY -> In Review").
+- Pre-stage Tier-B items into the "Needs Your Call" queue, each fully drafted: status-update drafts for active/stale lead projects (draft-only), colleague pings, the PR-review-response dispatch. Tag each executable-on-accept or draft-only.
+- Write workspace/daily/<today>.md morning section now — including the `### ⏳ Needs Your Call` block and, if any lead projects are stale, a "Stale lead projects" awareness bullet under Supporting Signal. Resolve every action's source link to a canonical URL (a bare ID like "DRC-3309" is not sufficient). Writing the file is Tier-A; it is a working draft.
 
-Stage 4 — Write & summarize:
-- Write workspace/daily/<today>.md morning section per the daily-brief template (schema appended below). Copy the prior-evening "Tomorrow's Lead" verbatim into "Carried From Yesterday" (do not summarize or reword).
-- If any lead projects are marked **stale** in Stage 0, add a "Stale lead projects" bullet under Supporting Signal listing each project (name + days-stale + URL). Plain awareness line, no action attached.
-- Resolve every action's source link to a canonical URL (Linear issue URL, Slack permalink, Notion page URL, GitHub PR URL). A bare ID like "DRC-3309" is not sufficient — produce the full URL.
-- Print exactly 5 lines to terminal, one per line in this order:
+Stage 2 — One batched review (the single gate):
+- Present, in one pass: (a) the drafted Arc + Actions — "edit, replace, add, or 'all good'"; (b) the "Needs Your Call" queue — resolve each accept / edit / respond / skip. Surface any conflicting signals here explicitly; never pick silently.
+- Execute accepted executable-on-accept items immediately (e.g. launch parallel `/recce-dev:pr-review-response` teammates, one per accepted PR dispatch); leave skipped and draft-only items in the block. Re-write the file with the resolutions and a short "Resolved this run" note.
+- This is the only input gate. If the session is non-interactive, skip the live review — the queue persists in the file (see Edge Cases).
+
+Stage 3 — Summarize:
+- Print exactly 6 lines, in order:
   1. Today's arcs (numbered, comma-separated).
   2. First action (verb-phrase + source URL + estimate).
   3. File path (workspace/daily/<today>.md).
   4. Signal counts (Linear: N, Slack: M, Notion: K).
   5. Carry-over status (theme + action carried, or "no prior-evening carry-over").
-- Optional follow-up: for each theme tied to a Linear project, offer once: "Want a Linear status-update draft for theme [X]?"
+  6. Autonomy tally: "Did autonomously: N · Queued for you: M (K resolved this run)".
 
 Edge Cases:
-- No prior evening file: Stage 1 says so explicitly; omit "Carried From Yesterday" in the file; window defaults to 24h.
-- Quiet day (low signal): Stage 1 reports counts; Stage 2 still proposes themes from carry-over and Linear backlog.
-- Conflicting signals: surface in Stage 1 explicitly; do not pick silently.
-- User aborts mid-walk-through: do NOT write a partial file. Print what was confirmed so far.
+- No prior evening file: say so in the Stage 2 review; omit "Carried From Yesterday" in the file; window defaults to 24h.
+- Quiet day (low signal): still draft themes from carry-over and Linear backlog; the file is written either way.
+- Conflicting signals: surface in the Stage 2 review explicitly; do not pick silently.
+- Non-interactive session / user steps away: the file is written with the "Needs Your Call" block and nothing Tier-B fires; unresolved items re-surface next run. (The file is a working draft — writing it without a live review is expected, not a partial-write failure.)
+- User redirects mid-review: apply the edit / respond and re-write the file; never leave it mid-mutation.
 - Re-run on the same day: read the existing morning section first; ask "amend or replace?" before mutating.
 
 Output:
-- File written: workspace/daily/<today>.md (morning section).
-- Terminal summary: 5 lines.
-- Optional Linear status-update drafts (when accepted).
+- File written: workspace/daily/<today>.md (morning section + "Needs Your Call" block).
+- Tier-A actions executed and logged; Tier-B items queued (and executed on accept in the review).
+- Terminal summary: 6 lines.
 
 Quality Bar:
-- File matches the daily-brief schema below exactly.
-- Themes count is 1–2; actions count is 3–5.
-- Every action has a source link and effort estimate.
-- Ranking labels visible in the digest.
-- All four input gates present.
-- "Carried From Yesterday" included iff prior-evening file existed.
-- Stale lead projects (no status update in 5+ days, active state) are surfaced in Stage 1's digest and the daily file's Supporting Signal — awareness only, never auto-elevated into themes/actions.
+- File matches the daily-brief schema (below) exactly, including the "Needs Your Call" block.
+- Themes count is 1–2; actions count is 3–5; every action has a canonical source URL and an effort estimate.
+- Ranking labels visible in the digest; conflicting signals surfaced, not silently resolved.
+- Exactly ONE input gate (the Stage 2 batched review) — no per-stage gates.
+- Every candidate action classified Tier A / B / C and handled per the escalation rule; nothing Tier-B executed unattended; status updates and Slack Connect are always draft-only.
+- Tier-A work is done before the review and reported in the autonomy tally.
+- "Carried From Yesterday" included iff a prior-evening file existed; carries verified via MCP where checkable.
+- Stale lead projects surfaced as awareness only (never auto-elevated into themes/actions).
 ```
 
 ## Daily Brief Schema
@@ -134,6 +138,12 @@ tied to source signals (Linear state change, Slack ask, Notion comment, etc.).
 Pulled from prior evening's "Tomorrow's Lead" section, if present.
 If no prior evening file exists, omit this section.
 
+### ⏳ Needs Your Call
+Tier-B actions the agent drafted but did NOT execute (irreversible / high-stakes /
+leaves the workspace toward others). Omit this section if empty. One entry per item:
+- [ ] (executable-on-accept | draft-only) Action verb-phrase — <#channel / issue / person> — why: one line
+       draft: <the ready-to-send artifact, inline or linked>
+
 ---
 
 ## Evening
@@ -144,7 +154,7 @@ Per theme + per action, status with one of: ✅ done, 🟡 partial, ❌ skipped.
 
 ### Decisions Captured
 "<decision> — <context> — <link>". Pulled from Slack/Linear/Notion activity
-during the day. Feeds the auto-memory system.
+during the day. Stashed to the auto-memory system automatically (Tier-A).
 
 ### Open Loops
 - Waiting on others: things you asked others for that haven't come back
@@ -156,6 +166,12 @@ during the day. Feeds the auto-memory system.
 ### Tomorrow's Lead
 1–2 candidate themes/actions to start tomorrow with, based on what shifted today.
 Tomorrow morning's run reads this and proposes it back as a starting point.
+
+### ⏳ Needs Your Call
+Tier-B actions drafted but not executed (status-update drafts, Slack messages, etc.).
+Omit if empty. Resolve accept / edit / respond / skip. One entry per item:
+- [ ] (executable-on-accept | draft-only) Action verb-phrase — <#channel / issue / person> — why: one line
+       draft: <the ready-to-send artifact, inline or linked>
 ```
 
 Conventions:
@@ -163,3 +179,4 @@ Conventions:
 - Status markers: emoji (`✅ 🟡 ❌`) for compactness.
 - Source links: always inline; never reference an item without a clickable link.
 - Carry-over: yesterday's "Tomorrow's Lead" → today's "Carried From Yesterday".
+- Needs Your Call: queued Tier-B actions (irreversible / high-stakes / leaves the workspace). Resolve accept / edit / respond / skip in one batched pass; omit the section when empty.

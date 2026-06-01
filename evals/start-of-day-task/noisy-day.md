@@ -27,10 +27,10 @@ Walk through the prompt as written.
 
 ## Expected Behavior
 
-- Stage 1 digest shows per-source counts (12/8/2 etc.) and surfaces top-ranked items with ranking labels.
+- The file's Supporting Signal and the Stage 3 summary show per-source counts (12/8/2 etc.) and top-ranked items with ranking labels.
 - Conflicting signals (e.g., the blocked Linear issue vs. the carried-over PR review) are surfaced explicitly, not picked silently.
-- Stage 2 proposes 1–2 themes — not 4. Themes synthesize across the noise rather than naming each item.
-- Stage 3 proposes 3–5 actions — not 12. Actions are the highest-leverage items per theme.
+- Stage 1 drafts 1–2 themes — not 4. Themes synthesize across the noise rather than naming each item.
+- Stage 1 drafts 3–5 actions — not 12. Actions are the highest-leverage items per theme.
 - Lower-tier signal (FYI mentions, ambient Notion edits) are compressed into one-liners or omitted.
 
 ## Failure Signals

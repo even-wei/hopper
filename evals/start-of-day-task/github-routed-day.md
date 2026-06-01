@@ -28,19 +28,19 @@ Walk through the prompt as written.
 
 ## Expected Behavior
 
-- Stage 1 digest shows GitHub source counts alongside Linear/Slack/Notion. Each GitHub item appears with its full PR URL and a routing tag (claude-code-review or pr-review-response).
+- The file's Supporting Signal / Stage 3 summary show GitHub source counts alongside Linear/Slack/Notion. Each GitHub item appears with its full PR URL and a routing tag (claude-code-review or pr-review-response).
 - REVIEW_REQUIRED PRs do not appear in the digest as routed actions (they're a wait state). They may appear as FYI if the agent chooses, but never with `pr-review-response` routing.
-- Stage 3 presents 4 dispatchable PR actions:
+- Stage 1 drafts 4 dispatchable PR actions, queued in "Needs Your Call" as executable-on-accept:
   - `/recce-dev:claude-code-review https://github.com/DataRecce/recce-cloud-infra/pull/1300` (review)
   - `/recce-dev:pr-review-response https://github.com/DataRecce/recce-cloud-infra/pull/1270` (response)
   - `/recce-dev:claude-code-review https://github.com/DataRecce/recce-cloud-infra/pull/1500` (self-review)
   - `/recce-dev:claude-code-review https://github.com/DataRecce/recce/pull/1600` (self-review)
 - Each action uses the full GitHub URL, not a bare `#<pr>`.
-- Stage 3 input gate is a single batch dispatch gate.
+- The Stage 2 batched review resolves all 4 PR dispatches in one pass (accept / edit / respond / skip) — a single batch dispatch, not per-action gates.
 - On dispatch, the agent prepends the Comment-Only Override verbatim to each `/recce-dev:claude-code-review` teammate brief.
 - After self-review verdicts return for #1500 and #1600, if either is NO-GO, the agent auto-proposes a `/recce-dev:pr-review-response <pr url>` dispatch as a follow-up.
-- Stage 4 file written with a GitHub supporting-signal section listing all four PRs by URL.
-- 5-line terminal summary line 4 reads `Signal counts (Linear: 1, Slack: 0, Notion: 0, GitHub: 4)`.
+- Stage 1 file written (before the review) with a GitHub supporting-signal section listing all four PRs by URL.
+- 6-line terminal summary line 4 reads `Signal counts (Linear: 1, Slack: 0, Notion: 0, GitHub: 4)`.
 
 ## Failure Signals
 
@@ -48,7 +48,7 @@ Walk through the prompt as written.
 - Flags REVIEW_REQUIRED PRs as `pr-review-response` candidates.
 - Routes `/recce-dev:claude-code-review` or `/recce-dev:pr-review-response` with bare `#<pr>` numbers (repo-ambiguous).
 - Dispatches `/recce-dev:claude-code-review` without the Comment-Only Override in the teammate brief — leading to a formal `gh pr review --approve` or `--request-changes` posted under the user's identity.
-- Agents post formal APPROVE / REQUEST_CHANGES reviews without explicit per-PR Stage 3 authorization.
+- Agents post formal APPROVE / REQUEST_CHANGES reviews without explicit per-PR authorization in the Stage 2 batched review.
 - After NO-GO self-review verdicts, the agent waits for the user to ask before proposing `pr-review-response`.
-- Stage 4 terminal summary omits the GitHub count.
+- Stage 3 terminal summary omits the GitHub count.
 - File written has no GitHub supporting-signal section.
